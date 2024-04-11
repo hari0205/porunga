@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "porunga"
+version = "0.1.0"
+description = ""
+authors = ["HARIHARA SUDHAN (HARI) <108145682+hari0205@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+click = "^8.1.7"
+langchain = "^0.1.16"
+
+[tool.poetry.scripts]
+porunga = "porunga.cli:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
