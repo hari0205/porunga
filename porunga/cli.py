@@ -1,6 +1,8 @@
 import subprocess
 import click
-from .llm import suggest_commit_message
+from InquirerPy import prompt
+
+from porunga.utils.parse_messages import parse_messages
 
 
 class CustomGroup(click.Group):
@@ -51,8 +53,17 @@ def show_diff(file_path):
 
 @cli.command("suggest")
 @click.argument("file_path", type=click.Path(exists=True))
-def show_diff(file_path):
-    """Show the git diff.
+@click.option(
+    "--num-messages",
+    "-n",
+    default=3,
+    help="Number of suggested commit messages to display.",
+)
+def suggest(file_path, num_messages):
+
+    from .llm import suggest_commit_message
+
+    """Suggest commit message.
 
     Usage:
 
@@ -77,7 +88,42 @@ def show_diff(file_path):
             click.echo("No difference detected. Start making changes to files")
             return
         else:
-            messages = suggest_commit_message(diff_output, 3)
+            messages = suggest_commit_message(diff_output, num_messages)
+
+            messages = parse_messages(messages)
+
+            # Prepare choices for InquirerPy
+            choices = [
+                {"name": msg["message"], "value": msg["message"]}
+                for msg in messages
+                if "message" in msg
+            ]
+
+            # Display the messages and get user selection
+            questions = [
+                {
+                    "type": "list",
+                    "message": "Please select a commit message:",
+                    "choices": choices,
+                }
+            ]
+            answers = prompt(questions)
+
+            selected_message = answers[0]
+
+            # Prompt user to edit the selected message
+            edit_question = [
+                {
+                    "type": "input",
+                    "name": "edited_message",
+                    "message": "Edit the commit message:",
+                    "default": selected_message,
+                }
+            ]
+
+            edited_answer = prompt(edit_question).get("edited_message")
+
+            click.echo(f"You selected: {edited_answer}")
     except subprocess.CalledProcessError as e:
         click.echo(f"Error running git diff: {e}")
 

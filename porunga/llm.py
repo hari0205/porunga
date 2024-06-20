@@ -19,14 +19,13 @@ def suggest_commit_message(diff, x):
         - [feat] for feature addition
         - [ref] for Code refactor
         - [docs] for documentation
-    
-    3. The output must be in XML format
-    
+    3. Return your suggestions in XML format, wrapped in a single root element <suggestions> 
     """
 
     prompt_message = PromptTemplate.from_template(PROMPT)
 
-    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo", max_tokens=1000)
+    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
     chain = prompt_message | llm | XMLOutputParser()
     op = chain.invoke({"diff": diff, "x": x})
+    print(op)
     return op

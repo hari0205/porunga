@@ -1,2 +1,2 @@
 def parse_messages(messages):
-    raise NotImplementedError()
+    return messages["suggestions"]
