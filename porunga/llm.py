@@ -27,5 +27,4 @@ def suggest_commit_message(diff, x):
     llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
     chain = prompt_message | llm | XMLOutputParser()
     op = chain.invoke({"diff": diff, "x": x})
-    print(op)
     return op
