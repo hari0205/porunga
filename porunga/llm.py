@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 from dotenv import find_dotenv, load_dotenv
 
 
-dotenv_path = find_dotenv(raise_error_if_not_found=True)
+dotenv_path = find_dotenv(raise_error_if_not_found=False)
 load_dotenv(dotenv_path)
 
 
