@@ -1,14 +1,19 @@
+import keyring
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import XMLOutputParser
+from langchain_core.exceptions import OutputParserException
 from langchain_openai import ChatOpenAI
 from dotenv import find_dotenv, load_dotenv
+from porunga.utils.exceptions.parse_error import ParseError
 
 
 dotenv_path = find_dotenv(raise_error_if_not_found=False)
 load_dotenv(dotenv_path)
 
+SERVICEID = "PORUNGA_APP"
 
-def suggest_commit_message(diff, x):
+
+def suggest_commit_message(diff, x) -> dict | ParseError | Exception:
     """LLM call to suggest commit message(s)"""
 
     PROMPT = """
@@ -24,7 +29,19 @@ def suggest_commit_message(diff, x):
 
     prompt_message = PromptTemplate.from_template(PROMPT)
 
-    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
-    chain = prompt_message | llm | XMLOutputParser()
-    op = chain.invoke({"diff": diff, "x": x})
+    llm = ChatOpenAI(
+        temperature=0,
+        model_name="gpt-3.5-turbo",
+        api_key=keyring.get_password(SERVICEID, "OPENAI_API_KEY"),
+        timeout=1500,
+        max_retries=3,
+    )
+    try:
+        chain = prompt_message | llm | XMLOutputParser()
+        op = chain.invoke({"diff": diff, "x": x})
+    except OutputParserException as _:
+        # Custom Error class
+        return ParseError()
+    except Exception as e:
+        return Exception
     return op
