@@ -1,9 +1,7 @@
 import subprocess
 import click
-import os
 from InquirerPy import prompt
 import keyring
-
 from porunga.utils.parse_messages import parse_messages
 
 SERVICEID = "PORUNGA_APP"
@@ -74,9 +72,12 @@ def suggest(file_path, num_messages):
     """
     from .llm import suggest_commit_message
 
-    openai_api_key = keyring.get_password(SERVICEID, "OPENAI_KEY")
+    openai_api_key = keyring.get_password(SERVICEID, "OPENAI_API_KEY")
     if openai_api_key is None:
-        click.secho("Error: The environment variable OPENAI_KEY is not set.", fg="red")
+        click.secho(
+            "Error: The environment variable OPENAI_API_KEY is not set. Please set the key using the setenv command.",
+            fg="red",
+        )
         return
 
     try:
@@ -98,7 +99,10 @@ def suggest(file_path, num_messages):
 
         # Generate initial commit message suggestions
         messages = suggest_commit_message(diff_output, num_messages)
-        messages = parse_messages(messages)
+        messages = parse_messages(messages=messages)
+        if isinstance(messages, (Exception)):
+            click.secho("An error occurred when trying to parse suggestions", fg="red")
+            return
 
         while True:
             # Prepare choices for InquirerPy
@@ -159,17 +163,27 @@ def suggest(file_path, num_messages):
 
 
 @cli.command("set-env")
-@click.option(
-    "--set-venv",
-    type=click.Tuple([str, str]),
-    multiple=True,
-    help="Set environment variables (e.g., --set-env VAR_NAME VAR_VALUE).",
+@click.argument(
+    "env_vars",
+    nargs=-1,
 )
-def set_env(set_env):
-    """Set environment variables and store them securely using keyring."""
-    for var, value in set_env:
-        keyring.set_password(SERVICEID, var, value)
-        click.echo(f"Stored {var} securely.")
+def setenv(env_vars):
+    """Set environment variables and store them securely using keyring.
+
+    Usage:
+
+        >>>    ```bash
+            porunga setenv VAR_NAME=VAR_VALUE [VAR_NAME=VAR_VALUE...]
+            ```
+    """
+    for env_var in env_vars:
+        try:
+            # Split each env_var by '=' to separate variable name and value
+            var, value = env_var.split("=", 1)
+            keyring.set_password(SERVICEID, var, value)
+            click.echo(f"Stored {var} securely.")
+        except ValueError:
+            click.secho(f"Invalid format for environment variable: {env_var}", fg="red")
 
 
 if __name__ == "main":

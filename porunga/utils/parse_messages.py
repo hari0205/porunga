@@ -1,2 +1,3 @@
 def parse_messages(messages):
-    return messages["suggestions"]
+    if isinstance(messages, dict):
+        return messages["suggestions"]
