@@ -35,13 +35,16 @@ def suggest_commit_message(diff, x) -> dict | ParseError | Exception:
         api_key=keyring.get_password(SERVICEID, "OPENAI_API_KEY"),
         timeout=1500,
         max_retries=3,
+        request_timeout=120,
     )
     try:
         chain = prompt_message | llm | XMLOutputParser()
         op = chain.invoke({"diff": diff, "x": x})
+        print(type(op))
     except OutputParserException as _:
         # Custom Error class
         return ParseError()
     except Exception as e:
         return Exception
-    return op
+    else:
+        return op
