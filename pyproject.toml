@@ -16,6 +16,7 @@ inquirerpy = "^0.3.4"
 keyring = "^25.2.1"
 tenacity = "^8.4.2"
 keyrings-alt = "^5.0.1"
+flake8 = "^7.1.0"
 
 [tool.poetry.scripts]
 porunga = "porunga.cli:cli"
