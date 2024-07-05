@@ -24,7 +24,7 @@ def suggest_commit_message(diff, x) -> dict | ParseError | Exception:
         - [feat] for feature addition
         - [ref] for Code refactor
         - [docs] for documentation
-    3. Return your suggestions in XML format, wrapped in a single root element <suggestions> 
+    3. Return your suggestions in XML format, wrapped in a single root element <suggestions>
     """
 
     prompt_message = PromptTemplate.from_template(PROMPT)
@@ -41,10 +41,10 @@ def suggest_commit_message(diff, x) -> dict | ParseError | Exception:
         chain = prompt_message | llm | XMLOutputParser()
         op = chain.invoke({"diff": diff, "x": x})
         print(type(op))
-    except OutputParserException as _:
+    except OutputParserException:
         # Custom Error class
         return ParseError()
-    except Exception as e:
+    except Exception:
         return Exception
     else:
         return op
