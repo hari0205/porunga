@@ -1,0 +1,69 @@
+name: "Porunga-CI"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint_build_publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Cache Poetry
+        id: cache-poetry
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+
+      - name: "Install Poetry"
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> $GITHUB_ENV
+
+      - name: Cache dependencies
+        id: cache-dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/cache
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}-cache
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install
+
+      - name: Run linting
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry run make lint
+
+      - name: Build file
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry run make build
+
+      - name: Config poetry for PyPi
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_token }}
+
+      - name: Publish
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry run make publish
