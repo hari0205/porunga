@@ -97,8 +97,17 @@ def suggest(file_path, num_messages):
             click.echo("No difference detected. Start making changes to files")
             return
 
+        # If diff is too large for GPT 4 send 1st chunk only (saving api costs)
+        if len(diff_output) > 16000:
+            diff_output = diff_output[:16000]
+
         # Generate initial commit message suggestions
         messages = suggest_commit_message(diff_output, num_messages)
+        if isinstance(messages, (Exception)):
+            click.secho(
+                "An error occurred when trying to generate suggestions", fg="red"
+            )
+            return
         messages = parse_messages(messages=messages)
         if isinstance(messages, (Exception)):
             click.secho("An error occurred when trying to parse suggestions", fg="red")
