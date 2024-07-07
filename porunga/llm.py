@@ -1,5 +1,6 @@
 import keyring
 import os
+import openai
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import XMLOutputParser
 from langchain_core.exceptions import OutputParserException
@@ -53,8 +54,9 @@ def suggest_commit_message(diff, x):
 
     llm = ChatOpenAI(
         temperature=0,
-        model_name=keyring.get_password(SERVICEID, "MODEL_NAME")
+        model_name=keyring.get_password(SERVICEID, "PORUNGA_MODEL_NAME")
         or os.environ.get("MODEL_NAME")
+        or keyring.get_password(SERVICEID, "PORUNGA_MODE")
         or "gpt-4o",
         api_key=keyring.get_password(SERVICEID, "OPENAI_API_KEY"),
         timeout=1500,
@@ -77,12 +79,11 @@ def suggest_commit_message(diff, x):
         # Method 3 (Recommended)
         chain = few_shot_prompt | llm | XMLOutputParser()
         op = chain.invoke({"diff": diff, "x": x})
-    except OutputParserException as e:
+    except OutputParserException:
         # Custom Error class
-        print(e)
         return ParseError()
     except Exception as e:
-        print(e)
-        return Exception
+        print(e.args[0])
+        return Exception(e.args[0])
     else:
         return op

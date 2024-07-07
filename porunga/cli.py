@@ -97,20 +97,57 @@ def suggest(file_path, num_messages):
             click.echo("No difference detected. Start making changes to files")
             return
 
-        # If diff is too large for GPT 4 send 1st chunk only (saving api costs)
-        if len(diff_output) > 16000:
-            diff_output = diff_output[:16000]
+        # Get the mode
+        mode = keyring.get_password(SERVICEID, "PORUNGA_MODE") or "precise"
+        model = keyring.get_password(SERVICEID, "PORUNGA_MODEL_NAME") or "gpt-4o"
+
+        # If diff is too large (saving api costs)
+        if model.startswith("gpt-4"):
+            match (mode):
+                # If you care about cost
+                case "cost":
+                    if len(diff_output) > 16000:
+                        diff_output = diff_output[:16000]
+
+                # If you care about precision
+                case "precise":
+                    if len(diff_output) > 60000:
+                        diff_output = diff_output[:60000]
+
+                case _:
+                    if len(diff_output) > 30000:
+                        diff_output = diff_output[:30000]
+
+        elif model.startswith("gpt-3"):
+            match (mode):
+                # If you care about cost
+                case "cost":
+                    if len(diff_output) > 3000:
+                        diff_output = diff_output[:3000]
+
+                # If you care about precision
+                case "precise":
+                    if len(diff_output) > 7000:
+                        diff_output = diff_output[:7000]
+
+                case _:
+                    if len(diff_output) > 5000:
+                        diff_output = diff_output[:5000]
 
         # Generate initial commit message suggestions
         messages = suggest_commit_message(diff_output, num_messages)
         if isinstance(messages, (Exception)):
             click.secho(
-                "An error occurred when trying to generate suggestions", fg="red"
+                f"An error occurred when trying to generate suggestions {messages}",
+                err=True,
+                fg="red",
             )
             return
         messages = parse_messages(messages=messages)
         if isinstance(messages, (Exception)):
-            click.secho("An error occurred when trying to parse suggestions", fg="red")
+            click.secho(
+                "An error occurred when trying to parse suggestions", err=True, fg="red"
+            )
             return
 
         while True:
@@ -139,7 +176,21 @@ def suggest(file_path, num_messages):
 
             if selected_message == "Regenerate suggestions":
                 messages = suggest_commit_message(diff_output, num_messages)
+                if isinstance(messages, (Exception)):
+                    click.secho(
+                        f"An error occurred when trying to generate suggestions {messages}",
+                        err=True,
+                        fg="red",
+                    )
+                    return
                 messages = parse_messages(messages)
+                if isinstance(messages, (Exception)):
+                    click.secho(
+                        "An error occurred when trying to parse suggestions",
+                        err=True,
+                        fg="red",
+                    )
+                    return
                 continue
 
             # Prompt user to edit the selected message
