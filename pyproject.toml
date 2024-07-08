@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "porunga"
+name = "porunga-CLI"
 version = "0.1.0"
 description = "A CLI tool to suggest commit messages"
 authors = ["HARIHARA SUDHAN (HARI) <108145682+hari0205@users.noreply.github.com>"]
