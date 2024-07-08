@@ -61,11 +61,12 @@ jobs:
 
       - name: Config poetry for PyPi
         run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_token }}
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
       - name: Publish
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          poetry publish --no-interaction --username __token__ --password ${{ secrets.PYPI_token }}
+          echo "export PYPI_TOKEN=${{ secrets.PYPI_TOKEN }}" >> $GITHUB_ENV
+          poetry run make publish
