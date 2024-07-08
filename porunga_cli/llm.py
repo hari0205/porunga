@@ -6,14 +6,12 @@ from langchain.output_parsers import XMLOutputParser
 from langchain_core.exceptions import OutputParserException
 from langchain_core.prompts import FewShotPromptTemplate
 from langchain_openai import ChatOpenAI
-from dotenv import find_dotenv, load_dotenv
+from langchain_core.runnables import RunnableSerializable
 from .utils.exceptions.parse_error import ParseError
 from .utils.examples.few_shot_examples import examples
 
 # from langchain.chains.llm import LLMChain
 
-dotenv_path = find_dotenv(raise_error_if_not_found=False)
-load_dotenv(dotenv_path)
 
 SERVICEID = "PORUNGA_APP"
 
@@ -100,7 +98,9 @@ Remember, return only the XML with the suggestions. No other text or explanation
         # print(res)
 
         # Method 3 (Recommended)
-        chain = few_shot_prompt | llm | XMLOutputParser()
+        chain: RunnableSerializable[Dict, Any] = (
+            few_shot_prompt | llm | XMLOutputParser()
+        )
         op = chain.invoke({"diff": diff, "x": x})
     except OutputParserException as e:
         # Custom Error class

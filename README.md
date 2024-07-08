@@ -43,7 +43,7 @@ You can set the following env variables that this tool uses:
 
 - `OPENAI_API_KEY` : API key from OpenAI
 - `PORUNGA_MODEL_NAME` : Open AI Model to use
-- `PORUNGA_MODE` : Either `cost` or `precise`. It is **recommended** to precise for the best results
+- `PORUNGA_MODE` : Either `cost` or `precise` or `balanced`. It is **recommended** to precise for the best results
 
 > This CLI tool uses gpt-4o by default, which is recommended.
 

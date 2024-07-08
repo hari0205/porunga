@@ -1,5 +1,5 @@
 import subprocess
-from typing import Annotated, Any, Dict, List, Optional, Union
+from typing import Annotated, Any, Dict, List, Optional, Union, Tuple
 import click
 from InquirerPy import prompt
 import keyring
@@ -11,7 +11,7 @@ Choice = Annotated[List[Union[str, None]], "Suggestions for user choice"]
 
 
 @click.group()
-def cli():
+def cli() -> None:
     pass
 
 
@@ -23,7 +23,7 @@ def cli():
     default=3,
     help="Number of suggested commit messages to display.",
 )
-def suggest(file_path: str, num_messages: Optional[int]):
+def suggest(file_path: str, num_messages: Optional[int]) -> None:
     """Suggest commit message.
 
     Usage:
@@ -34,7 +34,7 @@ def suggest(file_path: str, num_messages: Optional[int]):
     """
     from .llm import suggest_commit_message
 
-    openai_api_key = keyring.get_password(SERVICEID, "OPENAI_API_KEY")
+    openai_api_key: Union[str, None] = keyring.get_password(SERVICEID, "OPENAI_API_KEY")
     if openai_api_key is None:
         click.secho(
             "Error: The environment variable OPENAI_API_KEY is not set. Please set the key using the setenv command.",
@@ -79,9 +79,18 @@ def suggest(file_path: str, num_messages: Optional[int]):
                     if len(diff_output) > 60000:
                         diff_output = diff_output[:60000]
 
-                case _:
+                # For a balanced mode
+                case "balanced":
                     if len(diff_output) > 30000:
                         diff_output = diff_output[:30000]
+
+                # Invalid mode
+                case _:
+                    click.secho(
+                        "Invalid mode set. Please set a proper mode and try again",
+                        err=True,
+                        fg="red",
+                    )
 
         elif model.startswith("gpt-3"):
             match (mode):
@@ -95,10 +104,18 @@ def suggest(file_path: str, num_messages: Optional[int]):
                     if len(diff_output) > 7000:
                         diff_output = diff_output[:7000]
 
-                case _:
-                    if len(diff_output) > 5000:
-                        diff_output = diff_output[:5000]
+                # For a balanced mode
+                case "balanced":
+                    if len(diff_output) > 4800:
+                        diff_output = diff_output[:4800]
 
+                # Invalid mode
+                case _:
+                    click.secho(
+                        "Invalid mode set. Please set a proper mode and try again",
+                        err=True,
+                        fg="red",
+                    )
         # Generate initial commit message suggestions
         messages = suggest_commit_message(diff_output, num_messages)
         if isinstance(messages, (Exception)):
@@ -195,7 +212,7 @@ def suggest(file_path: str, num_messages: Optional[int]):
     "env_vars",
     nargs=-1,
 )
-def setenv(env_vars):
+def setenv(env_vars: Tuple[str, str]) -> None:
     """Set environment variables and store them securely.
 
     Usage:
