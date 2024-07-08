@@ -2,7 +2,7 @@
 .PHONY: lint
 lint:
 	@echo "Running flake8"
-	@flake8 ./porunga
+	@flake8 ./porunga-CLI
 
 # Clean pyc and pycache
 .PHONY: clean
