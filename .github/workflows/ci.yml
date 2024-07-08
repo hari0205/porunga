@@ -64,6 +64,8 @@ jobs:
           poetry config pypi-token.pypi ${{ secrets.PYPI_token }}
 
       - name: Publish
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           poetry run make publish
