@@ -21,7 +21,7 @@ build:
 .PHONY: publish
 publish:
 	@echo "Publishing package"
-	@epoetry publish --no-interaction --username __token__ --password ${PYPI_TOKEN}
+	@poetry publish --no-interaction --username __token__ --password ${PYPI_TOKEN}
 # Define a help target to show usage
 .PHONY: help
 help:
