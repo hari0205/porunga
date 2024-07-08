@@ -25,7 +25,3 @@ porunga = "porunga_cli.cli:cli"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[[tool.poetry.source]]
-name = "pypi"
-url = "https://upload.pypi.org/legacy/"
-default = true
