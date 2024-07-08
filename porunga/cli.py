@@ -1,10 +1,13 @@
 import subprocess
+from typing import Annotated, Any, Dict, List, Optional, Union
 import click
 from InquirerPy import prompt
 import keyring
 from porunga.utils.parse_messages import parse_messages
 
 SERVICEID = "PORUNGA_APP"
+
+Choice = Annotated[List[Union[str, None]], "Suggestions for user choice"]
 
 
 class CustomGroup(click.Group):
@@ -61,7 +64,7 @@ def show_diff(file_path):
     default=3,
     help="Number of suggested commit messages to display.",
 )
-def suggest(file_path, num_messages):
+def suggest(file_path: str, num_messages: Optional[int]):
     """Suggest commit message.
 
     Usage:
@@ -91,19 +94,22 @@ def suggest(file_path, num_messages):
 
         # Decode the byte output to string using UTF-8 encoding
         diff_output = diff_output_bytes.decode("utf-8")
-
         # Check for length of differences
         if len(diff_output) == 0:
             click.echo("No difference detected. Start making changes to files")
             return
 
         # Get the mode
-        mode = keyring.get_password(SERVICEID, "PORUNGA_MODE") or "precise"
-        model = keyring.get_password(SERVICEID, "PORUNGA_MODEL_NAME") or "gpt-4o"
+        mode: Union[str, None] = (
+            keyring.get_password(SERVICEID, "PORUNGA_MODE") or "precise"
+        )
+        model: Union[str, None] = (
+            keyring.get_password(SERVICEID, "PORUNGA_MODEL_NAME") or "gpt-4o"
+        )
 
         # If diff is too large (saving api costs)
         if model.startswith("gpt-4"):
-            match (mode):
+            match mode:
                 # If you care about cost
                 case "cost":
                     if len(diff_output) > 16000:
@@ -140,6 +146,7 @@ def suggest(file_path, num_messages):
             click.secho(
                 f"An error occurred when trying to generate suggestions {messages}",
                 err=True,
+                color=True,
                 fg="red",
             )
             return
@@ -152,7 +159,7 @@ def suggest(file_path, num_messages):
 
         while True:
             # Prepare choices for InquirerPy
-            choices = [
+            choices: Choice = [
                 {"name": msg["message"], "value": msg["message"]}
                 for msg in messages
                 if "message" in msg
@@ -163,7 +170,7 @@ def suggest(file_path, num_messages):
             )
 
             # Display the messages and get user selection
-            questions = [
+            questions: List[Dict[str, Any]] = [
                 {
                     "type": "list",
                     "message": "Please choose a selection",
@@ -203,7 +210,9 @@ def suggest(file_path, num_messages):
                 }
             ]
 
-            edited_answer = prompt(edit_question).get("edited_message")
+            edited_answer: Union[str, List[Any], bool, None] = prompt(
+                edit_question
+            ).get("edited_message")
 
             if click.confirm(
                 f"Do you want to commit and push with the following message? {edited_answer}",
@@ -228,7 +237,7 @@ def suggest(file_path, num_messages):
     nargs=-1,
 )
 def setenv(env_vars):
-    """Set environment variables and store them securely using keyring.
+    """Set environment variables and store them securely.
 
     Usage:
 

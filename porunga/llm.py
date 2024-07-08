@@ -1,17 +1,16 @@
 from typing import Any, Dict, Optional
 import keyring
-from langchain.output_parsers import RetryOutputParser
 import os
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import XMLOutputParser
 from langchain_core.exceptions import OutputParserException
 from langchain_core.prompts import FewShotPromptTemplate
-from langchain.output_parsers import OutputFixingParser
 from langchain_openai import ChatOpenAI
 from dotenv import find_dotenv, load_dotenv
 from porunga.utils.exceptions.parse_error import ParseError
 from porunga.utils.examples.few_shot_examples import examples
-from langchain.chains.llm import LLMChain
+
+# from langchain.chains.llm import LLMChain
 
 dotenv_path = find_dotenv(raise_error_if_not_found=False)
 load_dotenv(dotenv_path)
@@ -105,7 +104,7 @@ Remember, return only the XML with the suggestions. No other text or explanation
         op = chain.invoke({"diff": diff, "x": x})
     except OutputParserException as e:
         # Custom Error class
-        return ParseError()
+        return ParseError(e.args[0])
     except Exception as e:
         return Exception(e.args[0])
     else:
