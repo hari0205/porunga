@@ -29,3 +29,5 @@ help:
 	@echo "  lint     - Run Python linter"
 	@echo "  clean    - Clean up build artifacts"
 	@echo "  help     - Show this help message"
+	@echo "	 build	  - Build package"
+	@echo "  publish  - Publish package"
