@@ -3,7 +3,7 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 import click
 from InquirerPy import prompt
 import keyring
-from porunga.utils.parse_messages import parse_messages
+from .utils.parse_messages import parse_messages
 
 SERVICEID = "PORUNGA_APP"
 

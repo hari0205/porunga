@@ -7,8 +7,8 @@ from langchain_core.exceptions import OutputParserException
 from langchain_core.prompts import FewShotPromptTemplate
 from langchain_openai import ChatOpenAI
 from dotenv import find_dotenv, load_dotenv
-from porunga.utils.exceptions.parse_error import ParseError
-from porunga.utils.examples.few_shot_examples import examples
+from .utils.exceptions.parse_error import ParseError
+from .utils.examples.few_shot_examples import examples
 
 # from langchain.chains.llm import LLMChain
 

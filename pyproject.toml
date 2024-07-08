@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "porunga-CLI"
+name = "porunga_cli"
 version = "0.1.0"
 description = "A CLI tool to suggest commit messages"
 authors = ["HARIHARA SUDHAN (HARI) <108145682+hari0205@users.noreply.github.com>"]
@@ -19,7 +19,7 @@ keyrings-alt = "^5.0.1"
 flake8 = "^7.1.0"
 
 [tool.poetry.scripts]
-porunga = "porunga.cli:cli"
+porunga = "porunga_cli.cli:cli"
 
 [build-system]
 requires = ["poetry-core"]
