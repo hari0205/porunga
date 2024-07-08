@@ -1,11 +1,12 @@
+from typing import Any, Dict, Optional
 import keyring
+from langchain.output_parsers import RetryOutputParser
 import os
-import openai
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import XMLOutputParser
 from langchain_core.exceptions import OutputParserException
 from langchain_core.prompts import FewShotPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain.output_parsers import OutputFixingParser
 from langchain_openai import ChatOpenAI
 from dotenv import find_dotenv, load_dotenv
 from porunga.utils.exceptions.parse_error import ParseError
@@ -18,32 +19,55 @@ load_dotenv(dotenv_path)
 SERVICEID = "PORUNGA_APP"
 
 
-def suggest_commit_message(diff, x):
+def suggest_commit_message(
+    diff: str, x: Optional[int] = 3
+) -> Dict[Any, Any] | ParseError | Exception:
     """LLM call to suggest commit message(s)"""
 
     FEW_SHOT_PROMPT = """
-    You are a master at reading git diff messages. Based on the given git diff {diff}, suggest {x} commit messages. Keep the messages clean and concise. Follow these rules:
-    1. Messages must be no longer than 60 characters.
-    2. Include the general objective of the messages at the beginning:
-        - [fix] for bug fixes
-        - [feat] for feature addition
-        - [ref] for code refactor
-        - [docs] for documentation
-    3. Return ONLY the suggestions in XML wrapped in a single root element <suggestions>.
-    4. Return only the suggestions and no other text
-    """
+Task: Based on the provided git diff, suggest concise commit messages.
 
-    example_formatter_template = """Diff: {diff}\n
+Context: You are analyzing git diff messages to create clear and concise commit messages for a code repository. The commit messages should reflect the changes made, be easy to understand, and follow a standard format.
+
+Persona: You are a meticulous and experienced software developer who values clarity and precision in commit messages. You aim to create messages that are helpful for the whole development team.
+
+Example:
+git diff: diff --git a/file1.txt b/file1.txt
+          index 83db48f..e8a56b3 100644
+          --- a/file1.txt
+          +++ b/file1.txt
+          @@ -1 +1,2 @@
+          +Added new feature
+
+<suggestions>
+    <message>[feat] Add new feature to file1</message>
+</suggestions>
+
+Tone: Professional and precise.
+
+Format:
+1. Messages must be no longer than 60 characters.
+2. Start with the type of change:
+    - [fix] for bug fixes
+    - [feat] for new features
+    - [ref] for refactoring
+    - [docs] for documentation
+3. Return ONLY the suggestions in XML wrapped in a single root element <suggestions>.
+
+Remember, return only the XML with the suggestions. No other text or explanation is allowed.
+"""
+
+    example_formatter_template: str = """Diff: {diff}\n
                         Number of messages: {x}\n
                         Suggestions: {suggestions}
                        """
 
-    ex_prompt = PromptTemplate(
+    ex_prompt: PromptTemplate = PromptTemplate(
         input_variables=["diff", "x", "suggestions"],
         template=example_formatter_template,
     )
 
-    few_shot_prompt = FewShotPromptTemplate(
+    few_shot_prompt: FewShotPromptTemplate = FewShotPromptTemplate(
         examples=examples,
         example_prompt=ex_prompt,
         prefix=FEW_SHOT_PROMPT,
@@ -79,11 +103,10 @@ def suggest_commit_message(diff, x):
         # Method 3 (Recommended)
         chain = few_shot_prompt | llm | XMLOutputParser()
         op = chain.invoke({"diff": diff, "x": x})
-    except OutputParserException:
+    except OutputParserException as e:
         # Custom Error class
         return ParseError()
     except Exception as e:
-        print(e.args[0])
         return Exception(e.args[0])
     else:
         return op
